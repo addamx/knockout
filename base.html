@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>base</title>
+  <script src="../node_modules/knockout/build/output/knockout-latest.debug.js"></script>
+</head>
+
+<body>
+
+  <div>
+    <p>First name:
+      <strong data-bind="text: firstName"></strong>
+      <input data-bind="value: firstName" />
+    </p>
+    <p>Last name:
+      <strong data-bind="text: lastName"></strong>
+    </p>
+    <button data-bind="click: capitalizeLastName">capitalize firstName + LastName</button>
+    <p>Full name:
+      <strong data-bind="text: fullName"></strong>
+    </p>
+  </div>
+  <script>
+    function AppViewModel() {
+      this.firstName = ko.observable("Bert"); //input-mode
+      this.lastName = "Bertington";   //data
+      this.fullName = ko.computed(function () {    //computed state
+        return this.firstName() + " " + this.lastName;
+      }, this);
+      //method
+      this.capitalizeLastName = function () {
+        this.firstName(this.firstName().toUpperCase());
+        this.lastName = this.lastName.toUpperCase();    //没有变化, 如果需要修改原来的data, 则本身应该是函数`ko.observable`的返回值, 否则无法反应到视图
+      };
+    }
+    ko.applyBindings(new AppViewModel());
+  </script>
+
+
+
+</body>
+
+</html>
