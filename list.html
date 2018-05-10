@@ -21,6 +21,8 @@
         <th></th>
       </tr>
     </thead>
+    <!-- 显示被删除的item: `{....includeDestroyed: true}` -->
+    <!-- 如果不想用$data, 可以 `foreach: { data: people, as: 'person' }` 使用自定义的item名 -->
     <tbody data-bind="foreach: seats">
       <tr>
         <td>
@@ -28,7 +30,8 @@
           <input data-bind="value: name" />
         </td>
         <td>
-          <!-- 在foreach的item中, 使用$root才能调用根方法 -->
+          <!-- 在foreach的item中, 使用$root或者$parent才能调用根方法 -->
+          <!-- $index 获取索引值 -->
           <select data-bind="options: $root.availableMeals, value: meal, optionsText: 'mealName'"></select>
         </td>
         <!-- 注意: formattedPrice是seat的值, price时meal()的值 -->

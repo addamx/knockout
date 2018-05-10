@@ -10,10 +10,18 @@
   <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://cdn.bootcss.com/jqueryui/1.12.1/jquery-ui.min.js"></script>
   <link href="https://cdn.bootcss.com/jqueryui/1.12.1/jquery-ui.min.css" rel="stylesheet">
+  <style>
+    .starRating span:after {
+      content: '\2605';
+    }
+    .starRating span.hoverChosen {
+      color: sandybrown;
+    }
+  </style>
 </head>
 
 <body>
-  <h3 data-bind="fadeVisible: pointsUsed() > pointsBudget">You've used too many points! Please remove some.</h3>
+  <h3 data-bind="fadeVisible: pointsUsed() > pointsBudget, fadeSpeed: 'slow'">You've used too many points! Please remove some.</h3>
   <h3 data-bind="text: question"></h3>
   <p>Please distribute
     <b data-bind="text: pointsBudget"></b> points between the following options.</p>
@@ -28,6 +36,7 @@
     <tbody data-bind="foreach: answers">
       <tr>
         <td data-bind="text: answerText"></td>
+        <td data-bind="starRating: points"></td>
         <td>
           <select data-bind="options: [1,2,3,4,5], value: points"></select>
         </td>
@@ -40,20 +49,30 @@
     <b data-bind="text: pointsBudget - pointsUsed()"></b> points left to use.</p>
   <button data-bind="jqButton: { enable: pointsUsed() <= pointsBudget }, click: save">Finished</button>
 
+  <!-- ko mybinding: somedata --> ... <!-- /ko -->
   <script>
     $.noConflict();
     (function ($) {
+      //jquery animation
       ko.bindingHandlers.fadeVisible = {
+        //element, valueAccessor, allBindingsAccessor, viewModel, bindingContext
         init: function (element, valueAccessor) {
-          var shouldDisplay = valueAccessor();
+          //var shouldDisplay = valueAccessor();
+          var shouldDisplay = ko.unwrap(valueAccessor()); //无论是否被监视, ko.unwrap获取的都是当前的值
           $(element).toggle(shouldDisplay);
+
+          //加入valueAccessor中有option时函数, 可以让ko.ignoreDependencies忽略该函数
         },
-        update: function (element, valueAccessor) {
+        update: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
           var shouldDisplay = valueAccessor();
-          shouldDisplay ? $(element).fadeIn() : $(element).fadeOut();
+          console.log(viewModel);
+          console.log(bindingContext);
+          var fadeSpeed = allBindingsAccessor.get('fadeSpeed');
+          shouldDisplay ? $(element).fadeIn(fadeSpeed) : $(element).fadeOut(fadeSpeed);
         }
       };
 
+      //jquery-ui
       ko.bindingHandlers.jqButton = {
         init: function (element) {
           $(element).button();
@@ -61,6 +80,31 @@
         update: function (element, valueAccessor) {
           var currentValue = valueAccessor();
           $(element).button("option", "disabled", currentValue.enable === false);
+        }
+      };
+
+      //custom widgets
+      ko.bindingHandlers.starRating = {
+        init: function (element, valueAccessor) {
+          $(element).addClass("starRating");
+          for (var i = 0; i < 5; i++) {
+            $("<span>").appendTo(element);
+          }
+          $("span", element).each(function (index) {
+            $(this).hover(
+              function () { $(this).prevAll().add(this).addClass("hoverChosen") },
+              function () { $(this).prevAll().add(this).removeClass("hoverChosen") }
+            ).click(function () {
+              var observable = valueAccessor();  // Get the associated observable
+              observable(index + 1);               // Write the new rating to it
+            });
+          });
+        },
+        update: function (element, valueAccessor) {
+          var observable = valueAccessor();
+          $("span", element).each(function (index) {
+            $(this).toggleClass("chosen", index < observable());
+          });
         }
       };
 
